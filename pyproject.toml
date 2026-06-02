@@ -8,8 +8,10 @@ version = "0.1.0"
 description = "Async REST API for users, accounts and payment webhooks"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "asyncpg",
     "python-dotenv",
     "sanic",
+    "SQLAlchemy",
 ]
 
 [project.optional-dependencies]
