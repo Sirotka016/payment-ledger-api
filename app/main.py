@@ -1,11 +1,11 @@
 from sanic import Sanic
 from sanic.response import json
 
-from app.config import APP_NAME
+from app.config import settings
 
 
-def create_app(name: str = APP_NAME) -> Sanic:
-    app = Sanic(name)
+def create_app(name: str | None = None) -> Sanic:
+    app = Sanic(name or settings.app_name)
 
     @app.get("/health")
     async def health(request):
@@ -17,4 +17,4 @@ def create_app(name: str = APP_NAME) -> Sanic:
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000, dev=True)
+    app.run(host=settings.host, port=settings.port, dev=settings.debug)
