@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Async REST API for users, accounts and payment webhooks"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "alembic",
     "asyncpg",
     "python-dotenv",
     "sanic",
@@ -27,3 +28,6 @@ target-version = "py311"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
