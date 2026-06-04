@@ -111,8 +111,8 @@ GET    /users/me/payments
 GET    /admins/me
 GET    /admins/users
 POST   /admins/users
-PATCH  /admins/users/<user_id>
-DELETE /admins/users/<user_id>
+PATCH  /admins/users/<user_id:int>
+DELETE /admins/users/<user_id:int>
 
 POST   /webhooks/payments
 ```

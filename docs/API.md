@@ -57,6 +57,13 @@ curl "$BASE_URL/users/me/payments" \
   -H "Authorization: Bearer $USER_TOKEN"
 ```
 
+## Current Admin
+
+```bash
+curl "$BASE_URL/admins/me" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
 ## Admin List Users
 
 ```bash
@@ -81,6 +88,12 @@ curl -X POST "$BASE_URL/admins/users" \
 
 ## Admin Update User
 
+Route:
+
+```text
+PATCH /admins/users/<user_id:int>
+```
+
 ```bash
 curl -X PATCH "$BASE_URL/admins/users/2" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -93,6 +106,12 @@ curl -X PATCH "$BASE_URL/admins/users/2" \
 ```
 
 ## Admin Delete User
+
+Route:
+
+```text
+DELETE /admins/users/<user_id:int>
+```
 
 ```bash
 curl -X DELETE "$BASE_URL/admins/users/2" \
