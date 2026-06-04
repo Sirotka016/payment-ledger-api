@@ -50,3 +50,11 @@ def test_initial_migration_contains_default_data():
     assert migration.DEFAULT_ADMIN_EMAIL == "admin@example.com"
     assert migration.DEFAULT_USER_PASSWORD_HASH.startswith("pbkdf2_sha256$")
     assert migration.DEFAULT_ADMIN_PASSWORD_HASH.startswith("pbkdf2_sha256$")
+
+
+def test_initial_migration_updates_seeded_table_sequences():
+    text = INITIAL_MIGRATION.read_text(encoding="utf-8")
+
+    assert "pg_get_serial_sequence('users', 'id')" in text
+    assert "pg_get_serial_sequence('admins', 'id')" in text
+    assert "pg_get_serial_sequence('accounts', 'id')" in text

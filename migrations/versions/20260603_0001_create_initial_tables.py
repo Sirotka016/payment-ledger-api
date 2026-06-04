@@ -165,6 +165,19 @@ def upgrade() -> None:
         ],
     )
 
+    op.execute(
+        "SELECT setval(pg_get_serial_sequence('users', 'id'), "
+        "(SELECT MAX(id) FROM users))"
+    )
+    op.execute(
+        "SELECT setval(pg_get_serial_sequence('admins', 'id'), "
+        "(SELECT MAX(id) FROM admins))"
+    )
+    op.execute(
+        "SELECT setval(pg_get_serial_sequence('accounts', 'id'), "
+        "(SELECT MAX(id) FROM accounts))"
+    )
+
 
 def downgrade() -> None:
     op.drop_index("ix_payments_user_id", table_name="payments")
