@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payment_ledger
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payment_ledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      APP_DEBUG: "false"
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/payment_ledger
+      JWT_SECRET_KEY: dev-jwt-secret
+      WEBHOOK_SECRET_KEY: gfdmhghif38yrf9ew0jkf32
+    ports:
+      - "8000:8000"
+    command: sh -c "alembic upgrade head && python -m app.main"
+
+volumes:
+  postgres_data:
