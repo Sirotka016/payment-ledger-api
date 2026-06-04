@@ -5,6 +5,7 @@ from app.config import settings
 from app.routes.admins import admins_bp
 from app.routes.auth import auth_bp
 from app.routes.users import users_bp
+from app.routes.webhooks import webhooks_bp
 
 
 def create_app(name: str | None = None) -> Sanic:
@@ -12,6 +13,7 @@ def create_app(name: str | None = None) -> Sanic:
     app.blueprint(auth_bp)
     app.blueprint(users_bp)
     app.blueprint(admins_bp)
+    app.blueprint(webhooks_bp)
 
     @app.get("/health")
     async def health(request):
