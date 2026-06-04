@@ -17,9 +17,7 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
 
 async def list_users_with_accounts(session: AsyncSession) -> list[User]:
     result = await session.execute(
-        select(User)
-        .options(selectinload(User.accounts))
-        .order_by(User.id)
+        select(User).options(selectinload(User.accounts)).order_by(User.id)
     )
     return list(result.scalars().unique())
 

@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Payment
@@ -9,9 +12,7 @@ async def list_payments_by_user_id(
     user_id: int,
 ) -> list[Payment]:
     result = await session.execute(
-        select(Payment)
-        .where(Payment.user_id == user_id)
-        .order_by(Payment.id)
+        select(Payment).where(Payment.user_id == user_id).order_by(Payment.id)
     )
     return list(result.scalars())
 
@@ -26,19 +27,23 @@ async def get_payment_by_transaction_id(
     return result.scalar_one_or_none()
 
 
-async def create_payment(
+async def insert_payment_if_not_exists(
     session: AsyncSession,
     transaction_id: str,
     user_id: int,
     account_id: int,
-    amount,
-) -> Payment:
-    payment = Payment(
-        transaction_id=transaction_id,
-        user_id=user_id,
-        account_id=account_id,
-        amount=amount,
+    amount: Decimal,
+) -> bool:
+    statement = (
+        insert(Payment)
+        .values(
+            transaction_id=transaction_id,
+            user_id=user_id,
+            account_id=account_id,
+            amount=amount,
+        )
+        .on_conflict_do_nothing(index_elements=[Payment.transaction_id])
+        .returning(Payment.id)
     )
-    session.add(payment)
-    await session.flush()
-    return payment
+    result = await session.execute(statement)
+    return result.scalar_one_or_none() is not None

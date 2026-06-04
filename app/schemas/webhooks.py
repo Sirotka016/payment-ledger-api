@@ -12,7 +12,9 @@ class PaymentWebhookRequest:
     raw_payload: dict[str, object]
 
 
-def _parse_positive_int(value: object, field_name: str) -> tuple[int | None, str | None]:
+def _parse_positive_int(
+    value: object, field_name: str
+) -> tuple[int | None, str | None]:
     if type(value) is not int or value <= 0:
         return None, f"{field_name} must be a positive integer"
 

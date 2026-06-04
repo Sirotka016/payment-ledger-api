@@ -18,7 +18,9 @@ def get_bearer_token(request: Request) -> str | None:
     return token or None
 
 
-def decode_request_token(request: Request) -> tuple[dict[str, Any] | None, HTTPResponse | None]:
+def decode_request_token(
+    request: Request,
+) -> tuple[dict[str, Any] | None, HTTPResponse | None]:
     token = get_bearer_token(request)
 
     if token is None:

@@ -68,6 +68,22 @@ def test_login_rejects_wrong_password(monkeypatch):
     assert response.json == {"error": "Invalid email or password"}
 
 
+def test_admin_login_rejects_wrong_password(monkeypatch):
+    async def fake_get_admin_by_email(session, email):
+        return FakePrincipal(id=1, password_hash=hash_password("admin12345"))
+
+    monkeypatch.setattr(auth_module, "get_admin_by_email", fake_get_admin_by_email)
+
+    app = create_app("admin-wrong-password-test")
+    _, response = app.test_client.post(
+        "/auth/admin/login",
+        json={"email": "admin@example.com", "password": "wrong"},
+    )
+
+    assert response.status == 401
+    assert response.json == {"error": "Invalid email or password"}
+
+
 def test_login_requires_email_and_password():
     app = create_app("login-validation-test")
     _, response = app.test_client.post(

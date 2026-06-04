@@ -67,10 +67,7 @@ def parse_user_update_request(
     if has_password and (not isinstance(password, str) or not password):
         return None, "Password must be a non-empty string"
 
-    if has_full_name and (
-        not isinstance(full_name, str)
-        or not full_name.strip()
-    ):
+    if has_full_name and (not isinstance(full_name, str) or not full_name.strip()):
         return None, "Full name must be a non-empty string"
 
     return (

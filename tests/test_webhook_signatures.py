@@ -15,8 +15,7 @@ def test_payment_signature_matches_task_example():
     )
 
     assert (
-        signature
-        == "7b47e41efe564a062029da3367bde8844bea0fb049f894687cee5d57f2858bc8"
+        signature == "7b47e41efe564a062029da3367bde8844bea0fb049f894687cee5d57f2858bc8"
     )
 
 
@@ -29,3 +28,21 @@ def test_payment_signature_verification_rejects_wrong_signature():
     }
 
     assert verify_payment_signature(payload, "wrong-signature", "secret") is False
+
+
+def test_payment_signature_does_not_use_signature_field():
+    payload = {
+        "transaction_id": "external-transaction-id",
+        "user_id": 1,
+        "account_id": 1,
+        "amount": 100,
+    }
+    payload_with_signature = {
+        **payload,
+        "signature": "this-field-must-not-be-signed",
+    }
+
+    assert build_payment_signature(payload, "secret") == build_payment_signature(
+        payload_with_signature,
+        "secret",
+    )

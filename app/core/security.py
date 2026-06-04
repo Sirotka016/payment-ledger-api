@@ -49,8 +49,7 @@ def create_access_token(
     expires_delta: timedelta | None = None,
 ) -> str:
     expires_at = datetime.now(UTC) + (
-        expires_delta
-        or timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        expires_delta or timedelta(minutes=settings.jwt_access_token_expire_minutes)
     )
     payload = {
         "sub": subject,

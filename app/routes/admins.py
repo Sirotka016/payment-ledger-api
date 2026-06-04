@@ -129,7 +129,9 @@ async def update_user_by_admin(request: Request, user_id: int) -> HTTPResponse:
             existing_user = await get_user_by_email(session, user_data.email)
 
             if existing_user is not None:
-                return json({"error": "User with this email already exists"}, status=409)
+                return json(
+                    {"error": "User with this email already exists"}, status=409
+                )
 
             user.email = user_data.email
 

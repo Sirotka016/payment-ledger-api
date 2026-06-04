@@ -5,6 +5,7 @@ from app.core.signatures import build_payment_signature
 from app.main import create_app
 from app.routes import webhooks as webhooks_module
 from app.services.payment_webhooks import PaymentWebhookResult
+from sqlalchemy.exc import IntegrityError
 
 
 def signed_payload(**overrides):
@@ -71,3 +72,38 @@ def test_payment_webhook_validates_payload():
 
     assert response.status == 400
     assert response.json == {"error": "signature is required"}
+
+
+def test_payment_webhook_handles_duplicate_integrity_error(monkeypatch):
+    async def fake_process_payment_webhook(session, webhook):
+        raise IntegrityError("insert", {}, Exception("duplicate transaction"))
+
+    async def fake_get_existing_payment_result(session, transaction_id):
+        return PaymentWebhookResult(
+            status="already_processed",
+            transaction_id=transaction_id,
+            account_id=1,
+            balance=Decimal("100.00"),
+        )
+
+    monkeypatch.setattr(
+        webhooks_module,
+        "process_payment_webhook",
+        fake_process_payment_webhook,
+    )
+    monkeypatch.setattr(
+        webhooks_module,
+        "get_existing_payment_result",
+        fake_get_existing_payment_result,
+    )
+
+    app = create_app("payment-webhook-integrity-error-test")
+    _, response = app.test_client.post("/webhooks/payments", json=signed_payload())
+
+    assert response.status == 200
+    assert response.json == {
+        "status": "already_processed",
+        "transaction_id": "external-transaction-id",
+        "account_id": 1,
+        "balance": "100.00",
+    }

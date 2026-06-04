@@ -1,5 +1,6 @@
 from sanic import Blueprint, Request
 from sanic.response import HTTPResponse, json
+from sqlalchemy.exc import IntegrityError
 
 from app.config import settings
 from app.core.signatures import verify_payment_signature
@@ -7,6 +8,7 @@ from app.db import SessionLocal
 from app.schemas.webhooks import parse_payment_webhook_request
 from app.services.payment_webhooks import (
     PaymentWebhookError,
+    get_existing_payment_result,
     process_payment_webhook,
 )
 
@@ -34,6 +36,14 @@ async def payment_webhook(request: Request) -> HTTPResponse:
         except PaymentWebhookError as error:
             await session.rollback()
             return json({"error": error.message}, status=error.status_code)
+        except IntegrityError:
+            await session.rollback()
+            result = await get_existing_payment_result(
+                session,
+                webhook.transaction_id,
+            )
+            if result is None:
+                return json({"error": "Payment transaction conflict"}, status=409)
 
     return json(
         {

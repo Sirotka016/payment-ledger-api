@@ -3,10 +3,14 @@ from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.accounts import create_account, get_account_by_id
+from app.repositories.accounts import (
+    get_account_by_id,
+    get_or_create_account,
+    increase_account_balance,
+)
 from app.repositories.payments import (
-    create_payment,
     get_payment_by_transaction_id,
+    insert_payment_if_not_exists,
 )
 from app.repositories.users import get_user_by_id
 from app.schemas.webhooks import PaymentWebhookRequest
@@ -31,52 +35,79 @@ async def process_payment_webhook(
     session: AsyncSession,
     webhook: PaymentWebhookRequest,
 ) -> PaymentWebhookResult:
-    existing_payment = await get_payment_by_transaction_id(
+    existing_result = await get_existing_payment_result(
         session,
         webhook.transaction_id,
     )
 
-    if existing_payment is not None:
-        account = await get_account_by_id(session, existing_payment.account_id)
-        return PaymentWebhookResult(
-            status="already_processed",
-            transaction_id=existing_payment.transaction_id,
-            account_id=existing_payment.account_id,
-            balance=account.balance if account is not None else None,
-        )
+    if existing_result is not None:
+        return existing_result
 
     user = await get_user_by_id(session, webhook.user_id)
 
     if user is None:
         raise PaymentWebhookError("User not found", status_code=404)
 
-    account = await get_account_by_id(session, webhook.account_id)
+    account = await get_or_create_account(
+        session,
+        account_id=webhook.account_id,
+        user_id=webhook.user_id,
+    )
 
-    if account is None:
-        account = await create_account(
-            session,
-            account_id=webhook.account_id,
-            user_id=webhook.user_id,
-        )
-    elif account.user_id != webhook.user_id:
+    if account.user_id != webhook.user_id:
         raise PaymentWebhookError(
             "Account belongs to another user",
             status_code=409,
         )
 
-    account.balance += webhook.amount
-    await create_payment(
+    payment_created = await insert_payment_if_not_exists(
         session,
         transaction_id=webhook.transaction_id,
         user_id=webhook.user_id,
         account_id=webhook.account_id,
         amount=webhook.amount,
     )
-    await session.flush()
+
+    if not payment_created:
+        existing_result = await get_existing_payment_result(
+            session,
+            webhook.transaction_id,
+        )
+        if existing_result is not None:
+            return existing_result
+
+        raise PaymentWebhookError("Payment transaction conflict", status_code=409)
+
+    balance = await increase_account_balance(
+        session,
+        account_id=webhook.account_id,
+        amount=webhook.amount,
+    )
 
     return PaymentWebhookResult(
         status="processed",
         transaction_id=webhook.transaction_id,
         account_id=account.id,
-        balance=account.balance,
+        balance=balance,
+    )
+
+
+async def get_existing_payment_result(
+    session: AsyncSession,
+    transaction_id: str,
+) -> PaymentWebhookResult | None:
+    existing_payment = await get_payment_by_transaction_id(
+        session,
+        transaction_id,
+    )
+
+    if existing_payment is None:
+        return None
+
+    account = await get_account_by_id(session, existing_payment.account_id)
+    return PaymentWebhookResult(
+        status="already_processed",
+        transaction_id=existing_payment.transaction_id,
+        account_id=existing_payment.account_id,
+        balance=account.balance if account is not None else None,
     )
