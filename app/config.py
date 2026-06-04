@@ -23,6 +23,8 @@ class Settings:
     debug: bool
     database_url: str
     jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_access_token_expire_minutes: int
     webhook_secret_key: str
 
 
@@ -36,7 +38,14 @@ def load_settings() -> Settings:
             "DATABASE_URL",
             "postgresql+asyncpg://postgres:postgres@localhost:5432/payment_ledger",
         ),
-        jwt_secret_key=os.getenv("JWT_SECRET_KEY", "change-me"),
+        jwt_secret_key=os.getenv(
+            "JWT_SECRET_KEY",
+            "change-me-jwt-secret-with-at-least-32-bytes",
+        ),
+        jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
+        jwt_access_token_expire_minutes=int(
+            os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+        ),
         webhook_secret_key=os.getenv("WEBHOOK_SECRET_KEY", "change-me"),
     )
 

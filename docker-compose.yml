@@ -25,7 +25,7 @@ services:
       APP_PORT: 8000
       APP_DEBUG: "false"
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/payment_ledger
-      JWT_SECRET_KEY: dev-jwt-secret
+      JWT_SECRET_KEY: dev-jwt-secret-with-at-least-32-bytes
       WEBHOOK_SECRET_KEY: gfdmhghif38yrf9ew0jkf32
     ports:
       - "8000:8000"
